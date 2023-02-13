@@ -1,0 +1,26 @@
+syntax = "proto3";
+package gotmpl.v1;
+import "google/protobuf/struct.proto";
+
+service GotmplService {
+  // Execute executes a go template.
+  rpc Execute(ExecuteRequest) returns (ExecuteResponse) {}
+}
+
+message ExecuteRequest {
+  // template is the go template to execute.
+  string template = 1;
+  // data is the data to use as the root context when executing the template.
+  google.protobuf.Value data = 2;
+  // missingkey is the missing key behavior for the template. Must be "invalid", "error", or "zero".
+  // Defaults to "invalid".
+  optional string missingkey = 3;
+  // package is the package for the template. Must be "text" or "html".
+  // Defaults to "text".
+  optional string package = 4;
+}
+
+message ExecuteResponse {
+  // result is the result of executing the template.
+  string result = 1;
+}

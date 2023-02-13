@@ -4,8 +4,12 @@ set -e
 
 CDPATH="" cd -- "$(dirname -- "$(dirname -- "$0")")"
 
-make -s bin/gofumpt bin/handcrafted >/dev/null
+make -s bin/gofumpt bin/goimports bin/handcrafted >/dev/null
 
 git ls-files -o -c --exclude-standard '*.go' |
   bin/handcrafted |
   xargs bin/gofumpt -w -extra
+
+git ls-files -o -c --exclude-standard '*.go' |
+  bin/handcrafted |
+  xargs bin/goimports -w

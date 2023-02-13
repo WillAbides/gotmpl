@@ -1,0 +1,10 @@
+#!/bin/sh
+
+set -e
+
+CDPATH="" cd -- "$(dirname -- "$(dirname -- "$0")")"
+
+make -s bin/buf bin/protoc-gen-connect-go bin/protoc-gen-go bin/protoc-gen-go-grpc >/dev/null
+PATH="$(pwd)/bin:$PATH"
+
+buf "$@"

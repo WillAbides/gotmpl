@@ -1,0 +1,28 @@
+syntax = "proto3";
+package plugin.v1;
+import "google/protobuf/struct.proto";
+
+service PluginService {
+  // ListFunctions returns a list of functions provided by the plugin.
+  rpc ListFunctions(ListFunctionsRequest) returns (ListFunctionsResponse) {}
+  // ExecuteFunction executes the function with the given name and arguments.
+  rpc ExecuteFunction(ExecuteFunctionRequest) returns (ExecuteFunctionResponse) {}
+}
+
+message ListFunctionsRequest {}
+
+message ListFunctionsResponse {
+  repeated string functions = 1;
+}
+
+message ExecuteFunctionRequest {
+  // The name of the function to execute.
+  string function = 1;
+  // The arguments to the function.
+  repeated google.protobuf.Value args = 2;
+}
+
+message ExecuteFunctionResponse {
+  // The result of the function.
+  google.protobuf.Value result = 1;
+}

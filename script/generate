@@ -20,4 +20,5 @@ if [ "$1" = "--check" ]; then
   exit 0
 fi
 
+rm -rf internal/gen
 go generate ./...

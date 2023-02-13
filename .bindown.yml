@@ -3,6 +3,10 @@ systems:
 - darwin/arm64
 - linux/amd64
 dependencies:
+  buf:
+    template: origin#buf
+    vars:
+      version: 1.13.1
   gofumpt:
     template: origin#gofumpt
     vars:
@@ -11,11 +15,48 @@ dependencies:
     template: origin#golangci-lint
     vars:
       version: 1.50.1
+  protoc:
+    template: origin#protoc
+    vars:
+      version: "21.12"
+  protoc-gen-go:
+    template: origin#protoc-gen-go
+    vars:
+      version: 1.28.1
   shellcheck:
     template: origin#shellcheck
     vars:
       version: 0.8.0
 templates:
+  origin#buf:
+    url: https://github.com/bufbuild/buf/releases/download/v{{.version}}/{{.binname}}-{{.os}}-{{.arch}}{{.extension}}
+    archive_path: '{{.binname}}-{{.os}}-{{.arch}}{{.extension}}'
+    vars:
+      binname: buf
+      extension: ""
+    required_vars:
+    - version
+    overrides:
+    - matcher:
+        os:
+        - windows
+      dependency:
+        vars:
+          extension: .exe
+    substitutions:
+      arch:
+        amd64: x86_64
+      os:
+        darwin: Darwin
+        linux: Linux
+        windows: Windows
+    systems:
+    - darwin/amd64
+    - darwin/arm64
+    - linux/aarch64
+    - linux/amd64
+    - windows/amd64
+    - windows/arm64
   origin#gofumpt:
     url: https://github.com/mvdan/gofumpt/releases/download/v{{.version}}/gofumpt_v{{.version}}_{{.os}}_{{.arch}}{{.suffix}}
     archive_path: gofumpt_v{{.version}}_{{.os}}_{{.arch}}{{.suffix}}
@@ -72,6 +113,86 @@ templates:
     - linux/mips64le
     - linux/s390x
     - linux/ppc64le
+  origin#protoc:
+    url: https://github.com/protocolbuffers/protobuf/releases/download/v{{.version}}/protoc-{{.version}}-{{.os}}-{{.arch}}.zip
+    archive_path: bin/protoc
+    bin: protoc
+    link: true
+    required_vars:
+    - version
+    overrides:
+    - matcher:
+        arch:
+        - amd64
+        os:
+        - windows
+      dependency:
+        url: https://github.com/protocolbuffers/protobuf/releases/download/v{{.version}}/protoc-{{.version}}-win64.zip
+        archive_path: bin/protoc.exe
+    - matcher:
+        arch:
+        - "386"
+        os:
+        - windows
+      dependency:
+        url: https://github.com/protocolbuffers/protobuf/releases/download/v{{.version}}/protoc-{{.version}}-win32.zip
+        archive_path: bin/protoc.exe
+    - matcher:
+        arch:
+        - arm64
+        os:
+        - darwin
+      dependency:
+        vars:
+          arch: amd64
+    substitutions:
+      arch:
+        "386": x86_32
+        amd64: x86_64
+        ppcle: ppcle_64
+        s390x: s390x_64
+      os:
+        darwin: osx
+    systems:
+    - darwin/amd64
+    - darwin/arm64
+    - linux/amd64
+    - linux/ppcle
+    - linux/386
+    - windows/amd64
+    - windows/386
+  origin#protoc-gen-go:
+    url: https://github.com/protocolbuffers/protobuf-go/releases/download/v{{.version}}/protoc-gen-go.v{{.version}}.{{.os}}.{{.arch}}{{.urlsuffix}}
+    archive_path: protoc-gen-go{{.archivepathsuffix}}
+    bin: protoc-gen-go
+    vars:
+      archivepathsuffix: ""
+      urlsuffix: .tar.gz
+    required_vars:
+    - version
+    overrides:
+    - matcher:
+        os:
+        - windows
+      dependency:
+        vars:
+          archivepathsuffix: .exe
+          urlsuffix: .zip
+    - matcher:
+        arch:
+        - arm64
+        os:
+        - darwin
+      dependency:
+        vars:
+          arch: amd64
+    systems:
+    - windows/386
+    - windows/amd64
+    - linux/386
+    - linux/amd64
+    - darwin/amd64
+    - darwin/arm64
   origin#shellcheck:
     url: https://github.com/koalaman/shellcheck/releases/download/v{{.version}}/shellcheck-v{{.version}}.{{.os}}.{{.arch}}.tar.xz
     archive_path: shellcheck-v{{.version}}/shellcheck
@@ -104,6 +225,9 @@ templates:
 template_sources:
   origin: https://raw.githubusercontent.com/WillAbides/bindown-templates/master/bindown.yml
 url_checksums:
+  https://github.com/bufbuild/buf/releases/download/v1.13.1/buf-Darwin-arm64: 9158f26539f0cefca14a7256ff0723b42a34a0c08a9c6045fb413b8f349655a3
+  https://github.com/bufbuild/buf/releases/download/v1.13.1/buf-Darwin-x86_64: b76d857b8b26ce64d2185e7508ba1bc81968e03a96e2a32754454ee297a78df8
+  https://github.com/bufbuild/buf/releases/download/v1.13.1/buf-Linux-x86_64: 891961b6f800d1d99dcef0a89b0247002643f961b26940448ada6a6d90795cad
   https://github.com/golangci/golangci-lint/releases/download/v1.50.1/golangci-lint-1.50.1-darwin-amd64.tar.gz: 0f615fb8c364f6e4a213f2ed2ff7aa1fc2b208addf29511e89c03534067bbf57
   https://github.com/golangci/golangci-lint/releases/download/v1.50.1/golangci-lint-1.50.1-darwin-arm64.tar.gz: 3ca9753d7804b34f9165427fbe339dbea69bd80be8a10e3f02c6037393b2e1c4
   https://github.com/golangci/golangci-lint/releases/download/v1.50.1/golangci-lint-1.50.1-linux-amd64.tar.gz: 4ba1dc9dbdf05b7bdc6f0e04bdfe6f63aa70576f51817be1b2540bbce017b69a
@@ -112,3 +236,7 @@ url_checksums:
   https://github.com/mvdan/gofumpt/releases/download/v0.4.0/gofumpt_v0.4.0_darwin_amd64: 3f550baa6d4c071b01e9c68b9308bd2ca3bae6b3b09d203f19ed8626ee0fe487
   https://github.com/mvdan/gofumpt/releases/download/v0.4.0/gofumpt_v0.4.0_darwin_arm64: 768263452749a3a3cabf412f29f8a14e8bbdc7f6c6471427e977eebc6592ddb8
   https://github.com/mvdan/gofumpt/releases/download/v0.4.0/gofumpt_v0.4.0_linux_amd64: d3ca535e6b0b230a9c4f05a3ec54e358336b5e7474d239c15514e63a0b2a8041
+  https://github.com/protocolbuffers/protobuf-go/releases/download/v1.28.1/protoc-gen-go.v1.28.1.darwin.amd64.tar.gz: 6bc912fcc453741477568ae758c601ef74696e1e37027911f202479666f441f2
+  https://github.com/protocolbuffers/protobuf-go/releases/download/v1.28.1/protoc-gen-go.v1.28.1.linux.amd64.tar.gz: 5c5802081fb9998c26cdfe607017a677c3ceaa19aae7895dbb1eef9518ebcb7f
+  https://github.com/protocolbuffers/protobuf/releases/download/v21.12/protoc-21.12-linux-x86_64.zip: 3a4c1e5f2516c639d3079b1586e703fc7bcfa2136d58bda24d1d54f949c315e8
+  https://github.com/protocolbuffers/protobuf/releases/download/v21.12/protoc-21.12-osx-x86_64.zip: 9448ff40278504a7ae5139bb70c962acc78c32d8fc54b4890a55c14c68b9d10a
