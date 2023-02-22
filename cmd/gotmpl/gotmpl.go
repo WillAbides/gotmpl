@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -16,15 +18,45 @@ import (
 	"golang.org/x/net/http2/h2c"
 )
 
-type serverCmd struct {
-	Plugin  []string `kong:"short=p,type=path"`
-	Address string   `kong:"help='address to listen on',default='localhost:8080'"`
+type pluginData struct {
+	CommandPlugin []string `kong:"short=c"`
+	GrpcPlugin    []string `kong:"short=g"`
 }
 
-func (c *serverCmd) Run(ctx context.Context) (errOut error) {
+type execCmd struct {
+	pluginData `kong:",embed"`
+	Missingkey string
+	Package    string
+	Template   string `kong:"arg,required"`
+	Data       string `kong:"arg,required"`
+}
+
+func (c *execCmd) Run(ctx context.Context, k *kong.Context) error {
+	funcs, err := plugins.InitPlugins(ctx, c.CommandPlugin, c.GrpcPlugin, nil)
+	if err != nil {
+		return err
+	}
+	var data any
+	err = json.Unmarshal([]byte(c.Data), &data)
+	if err != nil {
+		return err
+	}
+	return internal.Execute(k.Stdout, c.Template, data, &internal.ExecuteOptions{
+		Funcs:      funcs,
+		Missingkey: c.Missingkey,
+		Package:    c.Package,
+	})
+}
+
+type serverCmd struct {
+	pluginData `kong:",embed"`
+	Address    string `kong:"help='address to listen on',default='localhost:8080'"`
+}
+
+func (c *serverCmd) Run(ctx context.Context, k *kong.Context) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
-	funcs, err := plugins.StartPlugins(ctx, c.Plugin, nil)
+	funcs, err := plugins.InitPlugins(ctx, c.CommandPlugin, c.GrpcPlugin, nil)
 	if err != nil {
 		return err
 	}
@@ -40,42 +72,27 @@ func (c *serverCmd) Run(ctx context.Context) (errOut error) {
 	go func() {
 		<-ctx.Done()
 		e := srv.Shutdown(ctx)
-		if errOut == nil {
-			errOut = e
+		if e != nil {
+			fmt.Fprintf(k.Stderr, "error shutting down server: %s", e)
 		}
 	}()
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, os.Interrupt)
 	go func() {
 		sig := <-sigs
-		fmt.Printf("received signal %q, shutting down\n", sig)
+		fmt.Fprintf(k.Stderr, "received signal %q, shutting down\n", sig)
 		cancel()
 	}()
-	err = srv.ListenAndServe()
+	listener, err := net.Listen("tcp", c.Address)
+	if err != nil {
+		return err
+	}
+	fmt.Fprintf(k.Stdout, "listening on %s\n", listener.Addr())
+	err = srv.Serve(listener)
 	if err == http.ErrServerClosed {
 		err = nil
 	}
 	return err
-}
-
-type execCmd struct {
-	Plugin     []string `kong:"short=p,type=path"`
-	Missingkey string
-	Package    string
-	Template   string `kong:"arg,required"`
-	Data       string `kong:"arg"`
-}
-
-func (c *execCmd) Run(ctx context.Context) error {
-	funcs, err := plugins.StartPlugins(ctx, c.Plugin, nil)
-	if err != nil {
-		return err
-	}
-	return internal.Execute(os.Stdout, c.Template, c.Data, &internal.ExecuteOptions{
-		Funcs:      funcs,
-		Missingkey: c.Missingkey,
-		Package:    c.Package,
-	})
 }
 
 type Cmd struct {

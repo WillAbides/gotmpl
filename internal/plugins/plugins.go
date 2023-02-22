@@ -45,6 +45,12 @@ type grpcServer struct {
 	pluginv1.UnimplementedPluginServiceServer
 }
 
+func NewGrpcServer(p Plugin) pluginv1.PluginServiceServer {
+	return &grpcServer{
+		GotmplPlugin: p,
+	}
+}
+
 func (p *grpcServer) ListFunctions(ctx context.Context, req *pluginv1.ListFunctionsRequest) (*pluginv1.ListFunctionsResponse, error) {
 	funcs, err := p.GotmplPlugin.ListFunctions(ctx)
 	if err != nil {

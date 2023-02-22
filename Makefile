@@ -32,6 +32,9 @@ bin/protoc: .bindown.yml
 bin/protoc-gen-go: .bindown.yml
 	script/bindown install $(notdir $@)
 
+bin/goreleaser: .bindown.yml
+	script/bindown install $(notdir $@)
+
 HANDCRAFTED_REV := 082e94edadf89c33db0afb48889c8419a2cb46a9
 bin/handcrafted: Makefile
 	GOBIN=${CURDIR}/bin \

@@ -15,6 +15,10 @@ dependencies:
     template: origin#golangci-lint
     vars:
       version: 1.50.1
+  goreleaser:
+    template: origin#goreleaser
+    vars:
+      version: 1.15.1
   protoc:
     template: origin#protoc
     vars:
@@ -113,6 +117,56 @@ templates:
     - linux/mips64le
     - linux/s390x
     - linux/ppc64le
+  origin#goreleaser:
+    url: https://github.com/goreleaser/goreleaser/releases/download/v{{.version}}/goreleaser_{{.os}}_{{.arch}}{{.urlsuffix}}
+    archive_path: goreleaser{{.archivepathsuffix}}
+    bin: goreleaser
+    vars:
+      archivepathsuffix: ""
+      urlsuffix: .tar.gz
+    required_vars:
+    - version
+    overrides:
+    - matcher:
+        os:
+        - windows
+      dependency:
+        vars:
+          archivepathsuffix: .exe
+          urlsuffix: .zip
+    - matcher:
+        os:
+        - darwin
+        version:
+        - 0.182 - 1.1
+      dependency:
+        vars:
+          arch: all
+    - matcher:
+        arch:
+        - arm64
+        os:
+        - darwin
+        version:
+        - < 0.155
+      dependency:
+        vars:
+          arch: amd64
+    substitutions:
+      arch:
+        "386": i386
+        amd64: x86_64
+      os:
+        darwin: Darwin
+        linux: Linux
+        windows: Windows
+    systems:
+    - darwin/amd64
+    - darwin/arm64
+    - linux/386
+    - linux/amd64
+    - windows/386
+    - windows/amd64
   origin#protoc:
     url: https://github.com/protocolbuffers/protobuf/releases/download/v{{.version}}/protoc-{{.version}}-{{.os}}-{{.arch}}.zip
     archive_path: bin/protoc
@@ -231,6 +285,11 @@ url_checksums:
   https://github.com/golangci/golangci-lint/releases/download/v1.50.1/golangci-lint-1.50.1-darwin-amd64.tar.gz: 0f615fb8c364f6e4a213f2ed2ff7aa1fc2b208addf29511e89c03534067bbf57
   https://github.com/golangci/golangci-lint/releases/download/v1.50.1/golangci-lint-1.50.1-darwin-arm64.tar.gz: 3ca9753d7804b34f9165427fbe339dbea69bd80be8a10e3f02c6037393b2e1c4
   https://github.com/golangci/golangci-lint/releases/download/v1.50.1/golangci-lint-1.50.1-linux-amd64.tar.gz: 4ba1dc9dbdf05b7bdc6f0e04bdfe6f63aa70576f51817be1b2540bbce017b69a
+  https://github.com/goreleaser/goreleaser/releases/download/v0.143.0/goreleaser_Darwin_x86_64.tar.gz: 0b713827a2c0e21238a211899e6eb81f23c2dc7c9b39ecb426b06ed6efbce568
+  https://github.com/goreleaser/goreleaser/releases/download/v0.143.0/goreleaser_Linux_x86_64.tar.gz: cc435eb337889d41414de80fd8474806187a3e908754cbf4599aa0a7604a3134
+  https://github.com/goreleaser/goreleaser/releases/download/v1.15.1/goreleaser_Darwin_arm64.tar.gz: 6b6a99bad918930482be7d65509d93ef99e4be017f092de64f079c6e889ab9cc
+  https://github.com/goreleaser/goreleaser/releases/download/v1.15.1/goreleaser_Darwin_x86_64.tar.gz: a470b32ab0ded2a9fe9621fb2e7b9e2aa50a4724e83291c51ecd0ec7303787f1
+  https://github.com/goreleaser/goreleaser/releases/download/v1.15.1/goreleaser_Linux_x86_64.tar.gz: 3f5d861f43dcefcf570b6e6269565abf4be803d54b7157e234dc7aa2c311666f
   https://github.com/koalaman/shellcheck/releases/download/v0.8.0/shellcheck-v0.8.0.darwin.x86_64.tar.xz: e065d4afb2620cc8c1d420a9b3e6243c84ff1a693c1ff0e38f279c8f31e86634
   https://github.com/koalaman/shellcheck/releases/download/v0.8.0/shellcheck-v0.8.0.linux.x86_64.tar.xz: ab6ee1b178f014d1b86d1e24da20d1139656c8b0ed34d2867fbb834dad02bf0a
   https://github.com/mvdan/gofumpt/releases/download/v0.4.0/gofumpt_v0.4.0_darwin_amd64: 3f550baa6d4c071b01e9c68b9308bd2ca3bae6b3b09d203f19ed8626ee0fe487
