@@ -12,6 +12,7 @@ import (
 
 	"github.com/alecthomas/kong"
 	"github.com/willabides/gotmpl/internal"
+	"github.com/willabides/gotmpl/internal/connect"
 	"github.com/willabides/gotmpl/internal/gen/proto/go/gotmpl/v1/gotmplv1connect"
 	"github.com/willabides/gotmpl/internal/plugins"
 	"golang.org/x/net/http2"
@@ -61,7 +62,7 @@ func (c *serverCmd) Run(ctx context.Context, k *kong.Context) error {
 		return err
 	}
 	mux := http.NewServeMux()
-	mux.Handle(gotmplv1connect.NewGotmplServiceHandler(&internal.ConnectHandler{
+	mux.Handle(gotmplv1connect.NewGotmplServiceHandler(&connect.ConnectHandler{
 		Funcs: funcs,
 	}))
 	srv := &http.Server{

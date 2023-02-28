@@ -1,8 +1,9 @@
-package internal
+package connect
 
 import (
 	"context"
 	"os/exec"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -15,13 +16,16 @@ import (
 
 func TestConnectHandlerExecute(t *testing.T) {
 	cmd := exec.Command("make", "bin/exampleplugin")
-	cmd.Dir = "../"
+	cmd.Dir = filepath.FromSlash("../../")
 	err := cmd.Run()
 	require.NoError(t, err)
 	ctx := context.Background()
-	funcMap, err := plugins.InitPlugins(ctx, []string{"../bin/exampleplugin"}, nil, &plugins.InitPluginsOptions{
-		ExecTimeout: 1 * time.Minute,
-	})
+	funcMap, err := plugins.InitPlugins(
+		ctx,
+		[]string{filepath.FromSlash("../../bin/exampleplugin")},
+		nil,
+		&plugins.InitPluginsOptions{ExecTimeout: 1 * time.Minute},
+	)
 	require.NoError(t, err)
 	handler := &ConnectHandler{
 		Funcs: funcMap,

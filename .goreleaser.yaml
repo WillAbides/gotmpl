@@ -2,13 +2,37 @@ before:
   hooks:
     - script/generate
 builds:
-  - env:
+  - id: gotmpl
+    env:
       - CGO_ENABLED=0
     goos:
       - linux
       - darwin
       - windows
+      - js
+    goarch:
+      - '386'
+      - amd64
+      - arm64
+      - wasm
     main: ./cmd/gotmpl
+  - id: gotmpl-nodejs-lib
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - js
+    goarch:
+      - wasm
+    main: ./cmd/gotmpl-nodejs-lib
+    binary: gotmpl-nodejs-lib
+archives:
+  - id: gotmpl
+    builds:
+      - gotmpl
+  - id: gotmpl-nodejs-lib
+    builds:
+      - gotmpl-nodejs-lib
+    name_template: 'gotmpl-nodejs-lib_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
 checksum:
   name_template: 'checksums.txt'
 snapshot:

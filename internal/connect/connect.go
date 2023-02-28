@@ -1,4 +1,4 @@
-package internal
+package connect
 
 import (
 	"bytes"
@@ -7,6 +7,7 @@ import (
 	"text/template"
 
 	"github.com/bufbuild/connect-go"
+	"github.com/willabides/gotmpl/internal"
 	gotmplv1 "github.com/willabides/gotmpl/internal/gen/proto/go/gotmpl/v1"
 )
 
@@ -22,12 +23,12 @@ func (s *ConnectHandler) Execute(
 	if request.Template == "" {
 		return nil, fmt.Errorf("template is required")
 	}
-	opts := ExecuteOptions{
+	opts := internal.ExecuteOptions{
 		Funcs: s.Funcs,
 	}
 	if request.Package != nil {
 		switch *request.Package {
-		case TextPackage, HtmlPackage:
+		case internal.TextPackage, internal.HtmlPackage:
 			opts.Package = *request.Package
 		default:
 			return nil, fmt.Errorf("invalid package: %s", *request.Package)
@@ -35,14 +36,14 @@ func (s *ConnectHandler) Execute(
 	}
 	if request.Missingkey != nil {
 		switch *request.Missingkey {
-		case MissingkeyInvalid, MissingkeyZero, MissingkeyError:
+		case internal.MissingkeyInvalid, internal.MissingkeyZero, internal.MissingkeyError:
 			opts.Missingkey = *request.Missingkey
 		default:
 			return nil, fmt.Errorf("invalid missingkey: %s", *request.Missingkey)
 		}
 	}
 	var buf bytes.Buffer
-	err := Execute(&buf, request.Template, request.Data.AsInterface(), &opts)
+	err := internal.Execute(&buf, request.Template, request.Data.AsInterface(), &opts)
 	if err != nil {
 		return nil, err
 	}
